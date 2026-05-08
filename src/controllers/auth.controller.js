@@ -23,7 +23,7 @@ const authController = {
       .json({
         success: true,
         message: "User registered successfully",
-        data: { user, accessToken },
+        data: { user, accessToken, refreshToken }, // Send refreshToken in response as fallback
       });
   }),
 
@@ -39,7 +39,7 @@ const authController = {
       .json({
         success: true,
         message: "Logged in successfully",
-        data: { user, accessToken },
+        data: { user, accessToken, refreshToken }, // Send refreshToken in response as fallback
       });
   }),
 
@@ -62,7 +62,8 @@ const authController = {
    * POST /api/auth/refresh
    */
   refresh: asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies?.refreshToken;
+    // Try cookie first, then body as fallback
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
     const { accessToken, refreshToken, user } =
       await authService.refreshAccessToken(incomingRefreshToken);
@@ -72,7 +73,7 @@ const authController = {
       .cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS)
       .json({
         success: true,
-        data: { accessToken, user },
+        data: { accessToken, user, refreshToken }, // Send refreshToken in response as fallback
       });
   }),
 };
