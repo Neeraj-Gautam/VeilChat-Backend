@@ -321,6 +321,15 @@ const messageService = {
 
     const skip = (page - 1) * limit;
 
+    // Get total count for pagination
+    const totalCount = await Message.countDocuments({
+      chat: chatId,
+      isDeleted: false,
+      deletedFor: { $ne: userId },
+    });
+
+    // Fetch messages in DESCENDING order (newest first), then reverse
+    // This ensures we get the most recent messages when paginating
     const messages = await Message.find({
       chat: chatId,
       isDeleted: false,
@@ -331,11 +340,12 @@ const messageService = {
       .populate(FORWARDED_FROM_POPULATE)
       .populate(FORWARDED_FROM_CHAT_POPULATE)
       .populate(REPLY_TO_POPULATE)
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 }) // Descending - newest first
       .skip(skip)
       .limit(limit);
 
-    return messages;
+    // Reverse to show oldest first in the UI
+    return messages.reverse();
   },
 
   /**
